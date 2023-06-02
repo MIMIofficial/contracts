@@ -561,91 +561,91 @@ contract GGToken is Ownable, ERC20 {
    event TransferToRecipient(address recipient, uint256 amount);
    event SetRecipient(address recipient);
 
-    constructor(uint256 _totalSupply, address _liquiditySupply, address _communityRewards, address _airdrop, address _manage, address _recipient, address _donator, uint256 _percentage) ERC20("GG", "GG") {
-        recipient = _recipient;
-        donator = _donator;
-        percentage = _percentage;
-        liquiditySupply = _liquiditySupply;
-        communityRewards = _communityRewards;
-        airdrop = _airdrop;
-        manage = _manage;
+   constructor(uint256 _totalSupply, address _liquiditySupply, address _communityRewards, address _airdrop, address _manage, address _recipient, address _donator, uint256 _percentage) ERC20("GG", "GG") {
+       recipient = _recipient;
+       donator = _donator;
+       percentage = _percentage;
+       liquiditySupply = _liquiditySupply;
+       communityRewards = _communityRewards;
+       airdrop = _airdrop;
+       manage = _manage;
 
-        uint256 amount = _totalSupply / 10;
-        _mint(airdrop, amount);
-        _mint(communityRewards, 3 * amount);
-        _mint(liquiditySupply, 5 * amount);
-        _mint(address(this), amount / 2);
-        _mint(manage, amount / 2);
-    }
+       uint256 amount = _totalSupply / 10;
+       _mint(airdrop, amount);
+       _mint(communityRewards, 3 * amount);
+       _mint(liquiditySupply, 5 * amount);
+       _mint(address(this), amount / 2);
+       _mint(manage, amount / 2);
+   }
 
-    function blacklist(address _address, bool _isBlacklisting) external onlyOwner {
-        blacklists[_address] = _isBlacklisting;
-    }
+   function blacklist(address _address, bool _isBlacklisting) external onlyOwner {
+       blacklists[_address] = _isBlacklisting;
+   }
 
-    function donate() external onlyDonator {
-        uint256 amount = balanceOf(address(this));
-        _transfer(address(this), recipient, amount);
-        emit TransferToRecipient(recipient, amount);
-    }
+   function donate() external onlyDonator {
+       uint256 amount = balanceOf(address(this));
+       _transfer(address(this), recipient, amount);
+       emit TransferToRecipient(recipient, amount);
+   }
 
-    function setRecipient(address _recipient) external onlyDonator {
-        recipient = _recipient;
-    }
+   function setRecipient(address _recipient) external onlyDonator {
+       recipient = _recipient;
+   }
  
-    function setRule(bool _limited, address _uniswapV2Pair, uint256 _maxHoldingAmount, uint256 _minHoldingAmount) external onlyOwner {
-        limited = _limited;
-        uniswapV2Pair = _uniswapV2Pair;
-        maxHoldingAmount = _maxHoldingAmount;
-        minHoldingAmount = _minHoldingAmount;
-    }
+   function setRule(bool _limited, address _uniswapV2Pair, uint256 _maxHoldingAmount, uint256 _minHoldingAmount) external onlyOwner {
+       limited = _limited;
+       uniswapV2Pair = _uniswapV2Pair;
+       maxHoldingAmount = _maxHoldingAmount;
+       minHoldingAmount = _minHoldingAmount;
+   }
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) override internal view {
-        require(!blacklists[to] && !blacklists[from], "Blacklisted");
+   function _beforeTokenTransfer(
+       address from,
+       address to,
+       uint256 amount
+   ) override internal view {
+       require(!blacklists[to] && !blacklists[from], "Blacklisted");
 
-        if (uniswapV2Pair == address(0)) {
-            require(from == address(0) || from == airdrop || from == manage || from == communityRewards || from == liquiditySupply || from == address(this), "trading is not started");
-            return;
-        }
+       if (uniswapV2Pair == address(0)) {
+           require(from == address(0) || from == airdrop || from == manage || from == communityRewards || from == liquiditySupply || from == address(this), "trading is not started");
+           return;
+       }
 
-        if (limited && from == uniswapV2Pair) {
-            require(super.balanceOf(to) + amount <= maxHoldingAmount && super.balanceOf(to) + amount >= minHoldingAmount, "Forbid");
-        }
-    }
+       if (limited && from == uniswapV2Pair) {
+           require(super.balanceOf(to) + amount <= maxHoldingAmount && super.balanceOf(to) + amount >= minHoldingAmount, "Forbid");
+       }
+   }
 
-    function _transfer(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) override internal {
-        require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
+   function _transfer(
+       address sender,
+       address recipient,
+       uint256 amount
+   ) override internal {
+       require(sender != address(0), "ERC20: transfer from the zero address");
+       require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        _beforeTokenTransfer(sender, recipient, amount);
+       _beforeTokenTransfer(sender, recipient, amount);
 
-        uint256 donateAmount = amount * percentage / 1000;
-        if (sender == donator || sender == communityRewards || sender == airdrop || sender == manage || recipient == uniswapV2Pair) {
-            donateAmount = 0; 
-        }
-        uint256 transferAmount = amount - donateAmount;
-        uint256 senderBalance = _balances[sender];
-        require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
-        unchecked {
-            _balances[sender] = senderBalance - amount;
-        }
-        _balances[recipient] += transferAmount;
-        _balances[address(this)] += donateAmount;
+       uint256 donateAmount = amount * percentage / 1000;
+       if (sender == donator || sender == communityRewards || sender == airdrop || sender == manage || recipient == uniswapV2Pair) {
+           donateAmount = 0;
+       }
+       uint256 transferAmount = amount - donateAmount;
+       uint256 senderBalance = _balances[sender];
+       require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
+       unchecked {
+           _balances[sender] = senderBalance - amount;
+       }
+       _balances[recipient] += transferAmount;
+       _balances[address(this)] += donateAmount;
 
-        emit Transfer(sender, recipient, transferAmount);
-        emit Donate(sender, donateAmount);
+       emit Transfer(sender, recipient, transferAmount);
+       emit Donate(sender, donateAmount);
 
-        _afterTokenTransfer(sender, recipient, amount);
-    }
+       _afterTokenTransfer(sender, recipient, amount);
+   }
 
-    function burn(uint256 value) external {
-        _burn(msg.sender, value);
-    }
+   function burn(uint256 value) external {
+       _burn(msg.sender, value);
+   }
 }
