@@ -553,7 +553,7 @@ contract GGToken is Ownable, ERC20 {
       _;
    }
 
-   event Donate( address indexed donator, address indexed recipient, uint256 amount);
+   event Donate(address indexed donator, address indexed recipient, uint256 amount);
    event TransferToRecipient(address indexed recipient, uint256 amount);
    event SetRecipient(address recipient);
 
