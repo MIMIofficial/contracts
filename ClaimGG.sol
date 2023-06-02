@@ -211,6 +211,8 @@ contract ClaimGG is Ownable {
     mapping(bytes32 => mapping(address => bool)) public claimedAddress;
     address public token;
 
+    event Claim(address indexed claimer, uint256 amount);
+
     function setToken(address _token) external onlyOwner {
         token = _token;
     }
@@ -227,6 +229,7 @@ contract ClaimGG is Ownable {
         IERC20 tokenContract = IERC20(token);
         tokenContract.transfer(account, amount);
         claimedAddress[root][account] = true;
+        emit Claim(account, amount);
     }
 
     function _leaf(address account, uint256 amount) internal pure returns (bytes32) {
