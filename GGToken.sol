@@ -543,7 +543,7 @@ contract GGToken is Ownable, ERC20 {
     uint256 public maxHoldingAmount;
     uint256 public minHoldingAmount;
     uint256 public percentage;
-    address public recipient;
+    address public donorRecipient;
     address public donator;
     address public liquiditySupply;
     address public communityRewards;
@@ -561,8 +561,8 @@ contract GGToken is Ownable, ERC20 {
    event TransferToRecipient(address recipient, uint256 amount);
    event SetRecipient(address recipient);
 
-   constructor(uint256 _totalSupply, address _liquiditySupply, address _communityRewards, address _airdrop, address _manage, address _recipient, address _donator, uint256 _percentage) ERC20("GG", "GG") {
-       recipient = _recipient;
+   constructor(uint256 _totalSupply, address _liquiditySupply, address _communityRewards, address _airdrop, address _manage, address _donorRecipient, address _donator, uint256 _percentage) ERC20("GG", "GG") {
+       donorRecipient = _donorRecipient;
        donator = _donator;
        percentage = _percentage;
        liquiditySupply = _liquiditySupply;
@@ -583,15 +583,15 @@ contract GGToken is Ownable, ERC20 {
    }
 
    function donate() external onlyDonator {
-       uint256 amount = balanceOf(address(this));
-       _transfer(address(this), recipient, amount);
-       emit TransferToRecipient(recipient, amount);
+       uint256 amount = super.balanceOf(address(this));
+       _transfer(address(this), donorRecipient, amount);
+       emit TransferToRecipient(donorRecipient, amount);
    }
 
-   function setRecipient(address _recipient) external onlyDonator {
-       recipient = _recipient;
+   function setRecipient(address _donorRecipient) external onlyDonator {
+       donorRecipient = _donorRecipient;
    }
- 
+
    function setRule(bool _limited, address _uniswapV2Pair, uint256 _maxHoldingAmount, uint256 _minHoldingAmount) external onlyOwner {
        limited = _limited;
        uniswapV2Pair = _uniswapV2Pair;
@@ -627,7 +627,7 @@ contract GGToken is Ownable, ERC20 {
        _beforeTokenTransfer(sender, recipient, amount);
 
        uint256 donateAmount = amount * percentage / 1000;
-       if (sender == donator || sender == communityRewards || sender == airdrop || sender == manage || recipient == uniswapV2Pair) {
+       if (sender == donator || sender == communityRewards || sender == airdrop || sender == manage || sender == address(this) || recipient == uniswapV2Pair) {
            donateAmount = 0;
        }
        uint256 transferAmount = amount - donateAmount;
@@ -640,7 +640,9 @@ contract GGToken is Ownable, ERC20 {
        _balances[address(this)] += donateAmount;
 
        emit Transfer(sender, recipient, transferAmount);
-       emit Donate(sender, donateAmount);
+       if (donateAmount > 0) {
+           emit Donate(sender, donateAmount);
+       }
 
        _afterTokenTransfer(sender, recipient, amount);
    }
