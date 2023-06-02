@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at Etherscan.io on 2023-05-25
-*/
-
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts v4.4.0 (utils/Context.sol)
 
@@ -557,8 +553,8 @@ contract GGToken is Ownable, ERC20 {
       _;
    }
 
-   event Donate(address donator, uint256 amount);
-   event TransferToRecipient(address recipient, uint256 amount);
+   event Donate(address indexed donator, address indexed recipient, uint256 amount);
+   event TransferToRecipient(address indexed recipient, uint256 amount);
    event SetRecipient(address recipient);
 
    constructor(uint256 _totalSupply, address _liquiditySupply, address _communityRewards, address _airdrop, address _manage, address _donorRecipient, address _donator, uint256 _percentage) ERC20("GG", "GG") {
@@ -641,7 +637,7 @@ contract GGToken is Ownable, ERC20 {
 
        emit Transfer(sender, recipient, transferAmount);
        if (donateAmount > 0) {
-           emit Donate(sender, donateAmount);
+           emit Donate(sender, recipient, donateAmount);
        }
 
        _afterTokenTransfer(sender, recipient, amount);
