@@ -207,7 +207,7 @@ library MerkleProof {
 }
 
 contract ClaimGG is Ownable {
-    mapping(bytes32 => bool) roots;
+    mapping(bytes32 => bool) public roots;
     mapping(bytes32 => mapping(address => bool)) public claimedAddress;
     address public token;
 
